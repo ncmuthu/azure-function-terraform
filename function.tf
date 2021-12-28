@@ -50,8 +50,9 @@ resource "azurerm_function_app" "function-app-test" {
      always_on   = "true"
      elastic_instance_minimum = 1
      linux_fx_version         = "PYTHON|3.7"
-     ftps_state               = "Disabled"
+     ftps_state               = "FtpsOnly"
   }
+  
   identity {
     type         = "UserAssigned"
     identity_ids = [ data.azurerm_user_assigned_identity.default.id ]
