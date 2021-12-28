@@ -11,6 +11,10 @@ resource "azurerm_storage_account" "function-app-test" {
   location                 = azurerm_resource_group.function-app-test.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
+  #network_rules {
+    #default_action             = "Deny"
+    #ip_rules                   = ["132.188.71.3", "203.202.234.0/24", "40.64.128.224", "40.64.107.98", "40.64.107.100", "40.64.107.105", "40.64.107.106", "40.64.107.203", "40.64.107.211", "40.64.128.224"]
+  #}
 }
 
 # Creating App Service Plan for the function app to use
@@ -46,6 +50,7 @@ resource "azurerm_function_app" "function-app-test" {
      always_on   = "true"
      elastic_instance_minimum = 1
      linux_fx_version         = "PYTHON|3.7"
+     ftps_state               = "Disabled"
   }
   identity {
     type         = "UserAssigned"
@@ -105,4 +110,9 @@ resource "null_resource" "function-app-restart" {
   provisioner "local-exec" {
     command = "az functionapp restart --name ncmuthu-func-app-test01 --resource-group function-app-test-rg"
   }
+
+  depends_on = [
+    azurerm_storage_blob.storage_blob,
+  ]
+
 }
