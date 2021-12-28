@@ -47,6 +47,10 @@ resource "azurerm_function_app" "function-app-test" {
      elastic_instance_minimum = 1
      linux_fx_version         = "PYTHON|3.7"
   }
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [ data.azurerm_user_assigned_identity.default.id ]
+  }
 }
 
 # container with private access to keep the package zip
