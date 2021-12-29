@@ -22,13 +22,21 @@ resource "azurerm_app_service_plan" "function-app-test" {
   name                = "azure-functions-test-service-plan"
   location            = azurerm_resource_group.function-app-test.location
   resource_group_name = azurerm_resource_group.function-app-test.name
-  kind                = "Linux"
+  kind                = "FunctionApp"
   reserved            = true
 
   sku {
-    tier = "Basic"
-    size = "B1"
+    tier = "Dynamic"
+    size = "Y1"
   }
+}
+
+# Enabling App Insights
+resource "azurerm_application_insights" "function-app-test" {
+  name                = "function-app-test-appinsights"
+  location            = azurerm_resource_group.function-app-test.location
+  resource_group_name = azurerm_resource_group.function-app-test.name
+  application_type    = "web"
 }
 
 # Creating Function app
@@ -40,19 +48,17 @@ resource "azurerm_function_app" "function-app-test" {
   storage_account_name       = azurerm_storage_account.function-app-test.name
   storage_account_access_key = azurerm_storage_account.function-app-test.primary_access_key
   app_settings = {
-    "WEBSITE_RUN_FROM_PACKAGE"    = "https://${azurerm_storage_account.function-app-test.name}.blob.core.windows.net/${azurerm_storage_container.function-app-test.name}/${azurerm_storage_blob.storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_sas.sas}",
-    "FUNCTIONS_WORKER_RUNTIME"    = "python",
-    "AzureWebJobsDisableHomepage" = "true",
+    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.function-app-test.name}.blob.core.windows.net/${azurerm_storage_container.function-app-test.name}/${azurerm_storage_blob.storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_sas.sas}",
+    "FUNCTIONS_WORKER_RUNTIME"       = "python",
+    "AzureWebJobsDisableHomepage"    = "true",
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = "${azurerm_application_insights.function-app-test.instrumentation_key}"
   }
   os_type = "linux"
   version = "~3"
   site_config {
-     always_on   = "true"
-     elastic_instance_minimum = 1
      linux_fx_version         = "PYTHON|3.7"
      ftps_state               = "FtpsOnly"
   }
-  
   identity {
     type         = "UserAssigned"
     identity_ids = [ data.azurerm_user_assigned_identity.default.id ]
@@ -117,3 +123,4 @@ resource "null_resource" "function-app-restart" {
   ]
 
 }
+
