@@ -15,6 +15,10 @@ resource "azurerm_storage_account" "function-app-test" {
     #default_action             = "Deny"
     #ip_rules                   = ["132.188.71.3", "203.202.234.0/24", "40.64.128.224", "40.64.107.98", "40.64.107.100", "40.64.107.105", "40.64.107.106", "40.64.107.203", "40.64.107.211", "40.64.128.224"]
   #}
+  depends_on = [
+    azurerm_resource_group.function-app-test,
+  ]
+
 }
 
 # container with private access to keep the package zip
