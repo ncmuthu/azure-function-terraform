@@ -69,12 +69,18 @@ resource "azurerm_application_insights" "function-app-test" {
   application_type    = "web"
 }
 
-# This is to get permission for the function to create resources in the subscription
-#data "azurerm_user_assigned_identity" "default" {
-#  name                = "managed-identity-function-app"
-#  resource_group_name = "managed-identity"
-#}
-
+# Managed identity creation
+resource "azurerm_user_assigned_identity" "managed_identity" {
+  resource_group_name = "${var.resource_group_name}"
+  location            = "${var.location}"
+  name                = "${var.function_app_name}_managed_identity"
+}
+# Adding role assignemnt for the managed identity
+resource "azurerm_role_assignment" "managed_identity" {
+  scope                = azurerm_user_assigned_identity.managed_identity.id
+  role_definition_name = "Reader"
+  principal_id         = azurerm_user_assigned_identity.managed_identity.principal_id
+}
 
 # Creating Function app
 resource "azurerm_function_app" "function-app-test" {
@@ -93,11 +99,11 @@ resource "azurerm_function_app" "function-app-test" {
   os_type = "linux"
   version = "~3"
   site_config {
-     linux_fx_version         = "PYTHON|3.7"
+     linux_fx_version         = "PYTHON|3.6"
      ftps_state               = "FtpsOnly"
   }
-  #identity {
-  #  type         = "UserAssigned"
-  #  identity_ids = [ data.azurerm_user_assigned_identity.default.id ]
-  #}
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [ azurerm_user_assigned_identity.managed_identity.id ]
+  }
 }
